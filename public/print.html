@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>طباعة الكوبونات</title>
+<link rel="icon" href="/assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="page-head no-print">
+      <div>
+        <h1>طباعة الكوبونات</h1>
+        <p class="sub" id="sheet-sub">جارٍ التجهيز…</p>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn gold" id="print-btn">طباعة</button>
+      <a class="btn ghost" href="/coupons">رجوع</a>
+    </div>
+    <div class="card">
+      <div class="sheet" id="sheet"></div>
+    </div>
+  </div>
+  <script type="module" src="/js/print.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لوحة التحكم — كوبونات المشرفون</title>
+<link rel="icon" href="/assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="page-head">
+      <div>
+        <h1>لوحة التحكم</h1>
+        <p class="sub">توليد كوبونات الخصم ومتابعة استخدامها</p>
+      </div>
+    </div>
+
+    <section class="grid cols-4" id="stats" aria-label="إحصائيات"></section>
+
+    <section class="grid cols-2" style="margin-top:18px">
+      <form class="card" id="generate-form">
+        <div class="card-title"><h2>توليد كوبونات جديدة</h2></div>
+        <label class="field">
+          <span class="lbl">عدد الأكواد المطلوبة</span>
+          <input type="number" name="quantity" value="10" min="1" max="2000" required inputmode="numeric">
+          <span class="help">لكل كود رمز QR خاص به، ويُحفظ في قاعدة البيانات للرجوع إليه عند الكشف.</span>
+        </label>
+        <div class="grid cols-2" style="gap:0 14px">
+          <label class="field">
+            <span class="lbl">قيمة الخصم على الكوبون</span>
+            <input type="text" name="amount" value="10" maxlength="12">
+          </label>
+          <label class="field">
+            <span class="lbl">تاريخ انتهاء الصلاحية (اختياري)</span>
+            <input type="date" name="expiresAt">
+          </label>
+        </div>
+        <label class="field">
+          <span class="lbl">اسم الدفعة أو ملاحظة (اختياري)</span>
+          <input type="text" name="note" maxlength="200" placeholder="مثال: كوبونات معرض جدة">
+        </label>
+        <button class="btn gold block" type="submit" id="generate-btn">توليد الأكواد</button>
+      </form>
+
+      <div class="card">
+        <div class="card-title">
+          <h2>آخر الدفعات</h2>
+          <span class="hint"><a href="/coupons">كل الكوبونات</a></span>
+        </div>
+        <div id="batches"></div>
+      </div>
+    </section>
+
+    <section class="card" id="result" hidden>
+      <div class="card-title">
+        <h2 id="result-title">الكوبونات المولّدة</h2>
+        <span class="hint" id="result-hint"></span>
+      </div>
+      <div class="btn-row" style="margin-bottom:16px">
+        <button class="btn" id="download-zip">تحميل الكل (ZIP)</button>
+        <a class="btn ghost" id="print-batch" target="_blank" rel="noopener">طباعة الدفعة</a>
+        <a class="btn ghost" id="export-csv">تصدير CSV</a>
+      </div>
+      <div class="coupon-grid" id="coupon-grid"></div>
+      <p class="help" id="preview-note" style="margin-top:14px"></p>
+    </section>
+  </div>
+  <script type="module" src="/js/dashboard.js"></script>
+</body>
+</html>

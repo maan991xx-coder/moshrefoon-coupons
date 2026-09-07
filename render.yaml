@@ -1,0 +1,30 @@
+# نشر بضغطة واحدة على Render — Blueprint جاهز في جذر المستودع
+# One-click deploy on Render: this blueprint sits at the repository root.
+services:
+  - type: web
+    name: moshrefoon-coupons
+    runtime: node
+    plan: starter          # الخطة المجانية لا تدعم الأقراص الدائمة؛ انظر disk أدناه
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: "22.13.0"
+      # ضع هنا عنوان الخدمة بعد أول نشر، مثل https://moshrefoon-coupons.onrender.com
+      - key: PUBLIC_URL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # يولَّد مرة واحدة ويبقى ثابتاً — لا تغيّره بعد طباعة الكوبونات
+      - key: COUPON_SECRET
+        generateValue: true
+      - key: DB_PATH
+        value: /var/data/coupons.db
+      - key: TRUST_PROXY
+        value: "1"
+    disk:
+      name: coupon-data
+      mountPath: /var/data
+      sizeGB: 1

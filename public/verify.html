@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>كشف كوبون — كوبونات المشرفون</title>
+<link rel="icon" href="/assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="wrap" style="max-width:760px">
+    <div class="page-head">
+      <div>
+        <h1>كشف كوبون</h1>
+        <p class="sub">تأكّد أن الكوبون مولّد من هذا الموقع، وأنه لم يُستخدم من قبل</p>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-title"><h2>امسح رمز QR</h2><span class="hint" id="scan-hint"></span></div>
+      <div class="scanner" id="scanner">
+        <video id="video" playsinline muted></video>
+        <div class="frame" hidden id="frame"></div>
+        <div class="placeholder" id="placeholder">
+          <div style="font-size:2rem">▣</div>
+          <p>شغّل الكاميرا ووجّهها إلى رمز QR على الكوبون</p>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn gold" id="camera-btn">تشغيل الكاميرا</button>
+        <button class="btn ghost" id="stop-btn" hidden>إيقاف</button>
+      </div>
+
+      <form id="manual-form" style="margin-top:18px">
+        <label class="field">
+          <span class="lbl">أو أدخل رقم الكوبون يدوياً</span>
+          <div style="display:flex;gap:10px">
+            <input type="text" name="code" placeholder="MSH-XXXX-XXXX" autocomplete="off"
+                   spellcheck="false" style="font-family:var(--mono);direction:ltr;text-align:center">
+            <button class="btn" type="submit">كشف</button>
+          </div>
+        </label>
+      </form>
+    </section>
+
+    <section id="outcome" hidden></section>
+  </div>
+  <script type="module" src="/js/verify.js"></script>
+</body>
+</html>

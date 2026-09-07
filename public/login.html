@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>دخول — كوبونات المشرفون</title>
+<meta name="description" content="نظام توليد كوبونات QR والتحقق منها لحملة المشرفون للحج والعمرة">
+<link rel="icon" href="/assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <main class="login-shell">
+    <form class="card login-card" id="login-form">
+      <img src="/assets/logo.png" alt="حملة المشرفون للحج والعمرة">
+      <h1>نظام الكوبونات</h1>
+      <p class="help" style="margin-bottom:18px">سجّل الدخول لتوليد الكوبونات وكشفها</p>
+      <label class="field">
+        <span class="lbl sr-only">كلمة المرور</span>
+        <input type="password" name="password" placeholder="كلمة المرور" autocomplete="current-password" required autofocus>
+      </label>
+      <button class="btn gold block" type="submit">دخول</button>
+      <p class="help" id="login-error" style="color:var(--bad);min-height:20px"></p>
+      <p class="help">للتحقق من كوبون فقط: <a href="/verify">صفحة الكشف</a></p>
+    </form>
+  </main>
+  <script type="module">
+    import { api, toast } from '/js/ui.js';
+    const form = document.getElementById('login-form');
+    const error = document.getElementById('login-error');
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      error.textContent = '';
+      try {
+        await api('/api/login', { method: 'POST', body: { password: form.password.value } });
+        const next = new URLSearchParams(location.search).get('next');
+        location.href = next && next.startsWith('/') ? next : '/';
+      } catch (err) {
+        error.textContent = err.message;
+        toast(err.message, 'bad');
+      }
+    });
+  </script>
+</body>
+</html>

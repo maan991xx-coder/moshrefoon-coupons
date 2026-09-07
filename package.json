@@ -1,0 +1,20 @@
+{
+  "name": "moshrefoon-coupons",
+  "version": "1.0.0",
+  "private": true,
+  "description": "نظام توليد كوبونات QR والتحقق منها — حملة المشرفون للحج والعمرة",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "dev": "node --watch --disable-warning=ExperimentalWarning server/index.js",
+    "test": "node --disable-warning=ExperimentalWarning --test tests/*.test.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "jsqr": "^1.4.0",
+    "qrcode": "^1.5.4"
+  }
+}

@@ -1,0 +1,21 @@
+# تشغيل الموقع على أي خادم فيه Docker:  docker compose up -d
+# Run anywhere Docker runs:  docker compose up -d
+services:
+  coupons:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # العنوان الحقيقي للموقع — يُكتب داخل رموز QR
+      PUBLIC_URL: "http://localhost:3000"
+      ADMIN_PASSWORD: "change-me-please"
+      # اتركه فارغاً ليولَّد مرة واحدة ويُحفظ في الحجم الدائم أدناه
+      COUPON_SECRET: ""
+      TRUST_PROXY: "1"
+    volumes:
+      # قاعدة البيانات ومفتاح التوقيع — لا تحذف هذا الحجم
+      - coupon-data:/app/data
+
+volumes:
+  coupon-data:
