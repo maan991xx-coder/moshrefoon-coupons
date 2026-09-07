@@ -127,8 +127,8 @@ curl 'localhost:3000/api/verify?token=MSH-7K3D-9QF2.A1B2C3'
 npm test
 ```
 
-٢٤ اختباراً تغطي التوليد، التوقيع، الكشف، الاستخدام مرة واحدة، انتهاء الصلاحية،
-الإلغاء، الصلاحيات، والتصدير.
+٢٨ اختباراً تغطي التوليد، التوقيع، الكشف، الاستخدام مرة واحدة، انتهاء الصلاحية،
+الإلغاء، الصلاحيات، والتصدير، وقراءة عنوان الموقع من منصة الاستضافة.
 
 ## أين أفتح الموقع؟ (النشر)
 
@@ -143,7 +143,24 @@ npm install && npm start
 
 ثم <http://localhost:3000>. الكاميرا تعمل على localhost بدون HTTPS.
 
-### ٢) Render — أسهل استضافة سحابية
+### ٢) Railway — بضغطات من المتصفح
+
+1. [railway.com](https://railway.com) → **New Project → Deploy from GitHub repo** واختر
+   المستودع. سيبني من `Dockerfile` تلقائياً (`railway.json` يضبط الباقي).
+2. **Settings → Networking → Generate Domain** للحصول على عنوان الموقع.
+3. **Variables**: أضف `ADMIN_PASSWORD` (كلمة مرور لوحة التحكم). ولا حاجة إلى
+   `PUBLIC_URL` ولا `TRUST_PROXY` — يقرأ التطبيق عنوان Railway وحده.
+4. **Volume** (مهم جداً): أضف حجماً دائماً بمسار **`/app/data`**. بدونه تُفقد
+   الكوبونات ومفتاح التوقيع مع كل إعادة نشر.
+5. افتح العنوان وسجّل الدخول، ثم ابدأ التوليد.
+
+عند ربط نطاقك الخاص لاحقاً أضف متغير `PUBLIC_URL` بعنوانك الجديد — لكن انتبه:
+الكوبونات المطبوعة قبل ذلك تحمل العنوان القديم داخل رمز QR.
+
+الحجم الدائم يحفظ `data/coupons.db` و `data/secret.key`، فيبقى توقيع الكوبونات
+صالحاً عبر عمليات النشر. ولمزيد من الأمان أضف `COUPON_SECRET` كمتغير ثابت.
+
+### ٣) Render — بديل مشابه
 
 1. ادفع الكود إلى GitHub (تم بالفعل).
 2. في Render: **New → Web Service** واختر المستودع.
@@ -158,7 +175,7 @@ npm install && npm start
 ملف `render.yaml` في جذر المستودع يفعل ذلك كله دفعة واحدة عبر **Blueprint**
 بدل الإنشاء اليدوي.
 
-### ٣) Fly.io — مع قرص دائم
+### ٤) Fly.io — مع قرص دائم
 
 ```bash
 fly launch --copy-config --no-deploy      # يقرأ fly.toml الموجود
@@ -169,7 +186,7 @@ fly deploy
 
 عدّل `PUBLIC_URL` في `fly.toml` إلى عنوان تطبيقك قبل توليد أي كوبونات.
 
-### ٤) أي خادم فيه Docker (VPS)
+### ٥) أي خادم فيه Docker (VPS)
 
 ```bash
 # عدّل PUBLIC_URL و ADMIN_PASSWORD في docker-compose.yml

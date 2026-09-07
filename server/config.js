@@ -51,9 +51,29 @@ const adminPassword = passwordFromEnv
 
 const prefix = (process.env.COUPON_PREFIX || 'MSH').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) || 'MSH';
 
+/**
+ * Hosting platforms publish the service's real address; use it when PUBLIC_URL
+ * is unset so a first deploy never mints QR codes pointing at localhost.
+ * Set PUBLIC_URL explicitly once a custom domain is attached — the address is
+ * printed into every coupon and cannot be changed after printing.
+ */
+function platformUrl() {
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL;
+  if (process.env.FLY_APP_NAME) return `https://${process.env.FLY_APP_NAME}.fly.dev`;
+  return '';
+}
+
+/** Behind a platform proxy every request arrives from the proxy's address, so
+ *  the rate limiter would throttle all staff as one client unless we trust it. */
+const behindPlatformProxy = Boolean(
+  process.env.RAILWAY_ENVIRONMENT || process.env.RENDER || process.env.FLY_APP_NAME,
+);
+
 export const config = {
   port: Number(process.env.PORT || 3000),
-  publicUrl: (process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 3000}`).replace(/\/+$/, ''),
+  publicUrl: (process.env.PUBLIC_URL || platformUrl() || `http://localhost:${process.env.PORT || 3000}`)
+    .trim().replace(/\/+$/, ''),
   dbPath: path.resolve(ROOT, process.env.DB_PATH || 'data/coupons.db'),
   secret: secret.value,
   secretGenerated: secret.generated,
@@ -61,7 +81,7 @@ export const config = {
   adminPasswordGenerated: adminPassword.generated,
   prefix,
   defaultAmount: (process.env.DEFAULT_AMOUNT || '10').trim(),
-  trustProxy: process.env.TRUST_PROXY === '1' || process.env.TRUST_PROXY === 'true',
+  trustProxy: process.env.TRUST_PROXY === '1' || process.env.TRUST_PROXY === 'true' || behindPlatformProxy,
   sessionHours: 12,
   maxBatchSize: 2000,
   dataDir,
