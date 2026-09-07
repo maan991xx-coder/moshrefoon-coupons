@@ -246,3 +246,51 @@ test('database survives a reopen with the same codes', async () => {
   const row = getDb().prepare('SELECT COUNT(*) AS count FROM coupons').get();
   assert.equal(row.count, 11);
 });
+
+// ------------------------------------------------- Google Sheets export --
+
+test('the shared export refuses a missing or wrong key', async () => {
+  assert.equal((await call('/api/export.csv', { anonymous: true })).status, 403);
+  assert.equal((await call('/api/export.csv?key=wrong', { anonymous: true })).status, 403);
+});
+
+test('the shared export returns the register without signatures', async () => {
+  const { body } = await call('/api/export-link');
+  assert.ok(body.enabled);
+  assert.match(body.formula, /^=IMPORTDATA\("http:\/\/test\.local\/api\/export\.csv\?key=.+"\)$/);
+
+  const path = body.url.replace('http://test.local', '');
+  const response = await fetch(base + path);          // no session: a spreadsheet has none
+  const csv = await response.text();
+  assert.match(response.headers.get('content-type'), /text\/csv/);
+
+  const lines = csv.trim().split('\n');
+  assert.equal(lines[0], 'الكود,الدفعة,القيمة,الحالة,تاريخ التوليد,تاريخ الاستخدام,ينتهي في');
+  assert.ok(lines.length > 10);
+  assert.ok(csv.includes(coupons[5].code));
+  assert.ok(!csv.includes(coupons[5].sig), 'the signature must never leave through a shared link');
+  assert.ok(!csv.includes('/v/'), 'verify links must never leave through a shared link');
+  assert.ok(!csv.startsWith('﻿'), 'a BOM confuses IMPORTDATA');
+});
+
+test('exported dates are spreadsheet-readable in the campaign time zone', async () => {
+  const { body } = await call('/api/export-link');
+  assert.equal(body.timezone, 'Asia/Riyadh');
+  const csv = await (await fetch(base + body.url.replace('http://test.local', ''))).text();
+  const row = csv.split('\n').find((line) => line.startsWith(coupons[5].code));
+  const [, , , status, created] = row.split(',');
+  assert.equal(status, 'صالح');
+  assert.match(created, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+
+  // Riyadh is UTC+3, so the exported hour must be three ahead of the stored one
+  const stored = new Date(coupons[5].createdAt);
+  const expected = new Date(stored.getTime() + 3 * 3600_000).toISOString().slice(11, 16);
+  assert.equal(created.slice(11), expected);
+});
+
+test('a batch filter narrows the shared export', async () => {
+  const { body } = await call('/api/export-link');
+  const url = body.url.replace('http://test.local', '') + '&batch=' + encodeURIComponent(batchRef);
+  const csv = await (await fetch(base + url)).text();
+  assert.equal(csv.trim().split('\n').length, 11); // header + the batch's 10 coupons
+});

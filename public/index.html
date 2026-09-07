@@ -55,6 +55,28 @@
       </div>
     </section>
 
+    <section class="card" id="sheets" hidden>
+      <div class="card-title">
+        <h2>ربط السجل بـ Google Sheets</h2>
+        <span class="hint">تحديث تلقائي</span>
+      </div>
+      <p class="help" style="margin-bottom:12px">
+        افتح جدولاً جديداً في Google Sheets، وفي الخلية <b>A1</b> الصق هذه الدالة فيمتلئ
+        الجدول بكل الكوبونات وحالتها، ويتحدث تلقائياً كلما فتحته.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="sheets-formula" readonly
+               style="flex:1;min-width:260px;font-family:var(--mono);font-size:.82rem;direction:ltr">
+        <button class="btn" id="copy-formula">نسخ الدالة</button>
+        <a class="btn ghost" id="open-csv" target="_blank" rel="noopener">فتح الملف</a>
+      </div>
+      <p class="help" style="margin-top:10px">
+        الرابط سرّي: من يفتحه يرى أرقام الكوبونات وحالتها (بلا توقيع ولا روابط تحقق).
+        لتغييره احذف <code>data/export.key</code> أو غيّر متغير <code>EXPORT_KEY</code>،
+        ولتعطيله تماماً اضبط <code>SHEETS_EXPORT=0</code>.
+      </p>
+    </section>
+
     <section class="card" id="result" hidden>
       <div class="card-title">
         <h2 id="result-title">الكوبونات المولّدة</h2>

@@ -139,5 +139,18 @@ document.getElementById('download-zip').addEventListener('click', async (event) 
   }
 });
 
+async function loadSheetsLink() {
+  const link = await api('/api/export-link');
+  if (!link.enabled) return;
+  document.getElementById('sheets').hidden = false;
+  document.getElementById('sheets-formula').value = link.formula;
+  document.getElementById('open-csv').href = link.url;
+  document.getElementById('copy-formula').addEventListener('click', async () => {
+    await copyText(link.formula);
+    toast('تم نسخ الدالة — الصقها في الخلية A1', 'ok');
+  });
+}
+
 loadStats().catch(() => {});
 loadBatches().catch(() => {});
+loadSheetsLink().catch(() => {});

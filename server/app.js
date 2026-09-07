@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import path from 'node:path';
 import express from 'express';
 import { config, ROOT } from './config.js';
@@ -28,6 +29,34 @@ function couponPayload(row) {
     url,
     qr: qrMatrix(url),
   };
+}
+
+/** CSV cell: quote anything that could break the column layout. */
+function csvCell(value) {
+  const text = String(value ?? '');
+  return /[",\n\r]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+
+const EXPORT_TIME = new Intl.DateTimeFormat('en-CA', {
+  timeZone: config.timezone, year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', hour12: false,
+});
+
+/** "2026-09-07 15:42" in the campaign's own time zone — a date Sheets understands. */
+function localTime(iso) {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const parts = Object.fromEntries(EXPORT_TIME.formatToParts(date).map((part) => [part.type, part.value]));
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
+}
+
+const STATUS_LABEL = { active: 'صالح', used: 'مستخدم', void: 'ملغى' };
+
+function timingSafeEquals(a, b) {
+  const left = crypto.createHash('sha256').update(String(a)).digest();
+  const right = crypto.createHash('sha256').update(String(b)).digest();
+  return crypto.timingSafeEqual(left, right);
 }
 
 function isExpired(row) {
@@ -237,6 +266,39 @@ export function createApp() {
     if (!outcome.ok) return res.status(409).json({ error: outcome.reason, message: 'الكوبون مستخدم مسبقاً' });
     db.logScan({ code: req.coupon.code, result: voided ? 'voided' : 'unvoided', action: 'void', ip: req.ip || '', actor: req.session.user });
     res.json({ ok: true, coupon: couponPayload(outcome.coupon) });
+  });
+
+  // ------------------------------------------------------- Google Sheets ---
+  // A read-only, key-protected CSV so a spreadsheet can pull the register with
+  // =IMPORTDATA(). Signatures and verify links are deliberately left out: the
+  // link is a shared secret, and a leaked one must not yield usable coupons.
+  app.get('/api/export.csv', rateLimiter({ windowMs: 60_000, max: 30 }), (req, res) => {
+    if (!config.exportEnabled) return res.status(404).json({ error: 'not_found' });
+    const key = String(req.query.key || '');
+    if (!key || !timingSafeEquals(key, config.exportKey)) {
+      return res.status(403).json({ error: 'forbidden', message: 'مفتاح التصدير غير صحيح' });
+    }
+    const batchRef = String(req.query.batch || '');
+    const { rows } = db.listCoupons({ batchRef, limit: 5000 });
+    const header = ['الكود', 'الدفعة', 'القيمة', 'الحالة', 'تاريخ التوليد', 'تاريخ الاستخدام', 'ينتهي في'];
+    const body = rows.map((row) => [
+      row.code,
+      row.batch_ref,
+      row.amount,
+      STATUS_LABEL[row.status] ?? row.status,
+      localTime(row.created_at),
+      localTime(row.used_at),
+      localTime(row.expires_at),
+    ].map(csvCell).join(','));
+    res.set('Content-Type', 'text/csv; charset=utf-8');
+    res.set('Cache-Control', 'no-store');
+    res.send([header.join(','), ...body].join('\n') + '\n');   // no BOM: Sheets reads UTF-8
+  });
+
+  app.get('/api/export-link', requireAuth, (_req, res) => {
+    if (!config.exportEnabled) return res.json({ enabled: false });
+    const url = `${config.publicUrl}/api/export.csv?key=${encodeURIComponent(config.exportKey)}`;
+    res.json({ enabled: true, url, formula: `=IMPORTDATA("${url}")`, timezone: config.timezone });
   });
 
   // ------------------------------------------------------------------ misc ---

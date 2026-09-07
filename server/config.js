@@ -49,6 +49,11 @@ const adminPassword = passwordFromEnv
   ? { value: passwordFromEnv, generated: false }
   : persistedSecret('admin-password.txt', () => crypto.randomBytes(9).toString('base64url'));
 
+const exportFromEnv = (process.env.EXPORT_KEY || '').trim();
+const exportKey = exportFromEnv
+  ? { value: exportFromEnv, generated: false }
+  : persistedSecret('export.key', () => crypto.randomBytes(24).toString('base64url'));
+
 const prefix = (process.env.COUPON_PREFIX || 'MSH').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) || 'MSH';
 
 /**
@@ -82,6 +87,11 @@ export const config = {
   prefix,
   defaultAmount: (process.env.DEFAULT_AMOUNT || '10').trim(),
   trustProxy: process.env.TRUST_PROXY === '1' || process.env.TRUST_PROXY === 'true' || behindPlatformProxy,
+  // رابط التصدير للقراءة فقط (Google Sheets) — من يملك الرابط يرى أرقام الكوبونات
+  exportKey: exportKey.value,
+  exportEnabled: process.env.SHEETS_EXPORT !== '0' && process.env.SHEETS_EXPORT !== 'false',
+  // التوقيت المعروض في ملف التصدير | display time zone for the export
+  timezone: process.env.DISPLAY_TIMEZONE || 'Asia/Riyadh',
   sessionHours: 12,
   maxBatchSize: 2000,
   dataDir,

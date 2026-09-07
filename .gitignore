@@ -1,8 +1,4 @@
 node_modules/
-data/*.db
-data/*.db-journal
-data/*.db-wal
-data/*.db-shm
-data/secret.key
-data/admin-password.txt
+# قاعدة البيانات والمفاتيح تُولَّد عند التشغيل — لا يُرفع منها شيء
+data/
 .env
