@@ -77,6 +77,21 @@
       </p>
     </section>
 
+    <section class="card" id="backup">
+      <div class="card-title">
+        <h2>النسخ الاحتياطي</h2>
+        <span class="hint" id="backup-hint"></span>
+      </div>
+      <p class="help" style="margin-bottom:12px" id="backup-status">…</p>
+      <div class="btn-row">
+        <a class="btn" id="download-backup" href="/api/backup" download>تحميل نسخة الآن</a>
+      </div>
+      <p class="help" style="margin-top:10px">
+        الملف يحوي قاعدة البيانات و<b>مفتاح التوقيع</b> معاً — بدون المفتاح لا تُقبل الكوبونات المطبوعة.
+        احفظه خارج الموقع (بريدك أو Google Drive) ولا تشاركه: من يملكه يستطيع توقيع كوبونات.
+      </p>
+    </section>
+
     <section class="card" id="result" hidden>
       <div class="card-title">
         <h2 id="result-title">الكوبونات المولّدة</h2>
