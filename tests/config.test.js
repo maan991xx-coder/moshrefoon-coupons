@@ -1,12 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = "import('./server/config.js').then((m) => console.log(JSON.stringify("
-  + '{ url: m.config.publicUrl, trustProxy: m.config.trustProxy })))';
+  + '{ url: m.config.publicUrl, trustProxy: m.config.trustProxy,'
+  + ' dbPath: m.config.dbPath, dataDir: m.config.dataDir })))';
 
 /** config.js reads the environment once at import, so each case needs its own process. */
 function loadConfig(env) {
@@ -52,4 +55,32 @@ test('an explicit PUBLIC_URL always wins, trailing slash trimmed', () => {
     RAILWAY_PUBLIC_DOMAIN: 'ignored.up.railway.app',
   });
   assert.equal(config.url, 'https://coupons.example.com');
+});
+
+test('a mounted volume holds the database and every generated key', () => {
+  const volume = fs.mkdtempSync(path.join(os.tmpdir(), 'coupon-volume-'));
+  try {
+    const config = loadConfig({ RAILWAY_VOLUME_MOUNT_PATH: volume });
+    assert.equal(config.dataDir, volume);
+    assert.equal(config.dbPath, path.join(volume, 'coupons.db'));
+  } finally {
+    fs.rmSync(volume, { recursive: true, force: true });
+  }
+});
+
+test('an explicit DB_PATH still wins over the volume', () => {
+  const volume = fs.mkdtempSync(path.join(os.tmpdir(), 'coupon-volume-'));
+  try {
+    const config = loadConfig({ RAILWAY_VOLUME_MOUNT_PATH: volume, DB_PATH: '/srv/coupons/live.db' });
+    assert.equal(config.dbPath, '/srv/coupons/live.db');
+    assert.equal(config.dataDir, volume);
+  } finally {
+    fs.rmSync(volume, { recursive: true, force: true });
+  }
+});
+
+test('without a volume the app keeps its state beside the code', () => {
+  const config = loadConfig({});
+  assert.equal(config.dataDir, path.join(ROOT, 'data'));
+  assert.equal(config.dbPath, path.join(ROOT, 'data', 'coupons.db'));
 });

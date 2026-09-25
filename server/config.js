@@ -24,7 +24,14 @@ function loadDotEnv() {
 }
 loadDotEnv();
 
-const dataDir = path.join(ROOT, 'data');
+/**
+ * Everything that must survive a redeploy — database, signing key, admin
+ * password, export key — lives in one directory. On a platform that mounts a
+ * volume (Railway publishes its mount path) that directory IS the volume, so
+ * the operator can mount it anywhere and nothing is lost.
+ */
+const volumeDir = (process.env.RAILWAY_VOLUME_MOUNT_PATH || '').trim();
+const dataDir = volumeDir || path.join(ROOT, 'data');
 fs.mkdirSync(dataDir, { recursive: true });
 
 /** Read a persisted secret, creating it on first run. */
@@ -79,7 +86,7 @@ export const config = {
   port: Number(process.env.PORT || 3000),
   publicUrl: (process.env.PUBLIC_URL || platformUrl() || `http://localhost:${process.env.PORT || 3000}`)
     .trim().replace(/\/+$/, ''),
-  dbPath: path.resolve(ROOT, process.env.DB_PATH || 'data/coupons.db'),
+  dbPath: path.resolve(ROOT, process.env.DB_PATH || path.join(dataDir, 'coupons.db')),
   secret: secret.value,
   secretGenerated: secret.generated,
   adminPassword: adminPassword.value,
