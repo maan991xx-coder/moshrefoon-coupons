@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server/index.js",
     "dev": "node --watch --disable-warning=ExperimentalWarning server/index.js",
+    "restore": "node --disable-warning=ExperimentalWarning server/restore-cli.js",
     "test": "node --disable-warning=ExperimentalWarning --test tests/*.test.js"
   },
   "dependencies": {

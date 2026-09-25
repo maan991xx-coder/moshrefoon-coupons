@@ -61,6 +61,22 @@ const exportKey = exportFromEnv
   ? { value: exportFromEnv, generated: false }
   : persistedSecret('export.key', () => crypto.randomBytes(24).toString('base64url'));
 
+const envNumber = (name, fallback, min) => {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value >= min ? value : fallback;
+};
+
+/** Off-site copy: any S3-compatible bucket (Railway Buckets, R2, B2, AWS). */
+const s3 = {
+  endpoint: (process.env.BACKUP_S3_ENDPOINT || '').trim().replace(/\/+$/, ''),
+  bucket: (process.env.BACKUP_S3_BUCKET || '').trim(),
+  region: (process.env.BACKUP_S3_REGION || 'auto').trim(),
+  accessKeyId: (process.env.BACKUP_S3_ACCESS_KEY_ID || '').trim(),
+  secretAccessKey: (process.env.BACKUP_S3_SECRET_ACCESS_KEY || '').trim(),
+  prefix: (process.env.BACKUP_S3_PREFIX || 'moshrefoon-backups').trim().replace(/^\/+|\/+$/g, ''),
+};
+s3.enabled = Boolean(s3.endpoint && s3.bucket && s3.accessKeyId && s3.secretAccessKey);
+
 const prefix = (process.env.COUPON_PREFIX || 'MSH').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) || 'MSH';
 
 /**
@@ -99,6 +115,14 @@ export const config = {
   exportEnabled: process.env.SHEETS_EXPORT !== '0' && process.env.SHEETS_EXPORT !== 'false',
   // التوقيت المعروض في ملف التصدير | display time zone for the export
   timezone: process.env.DISPLAY_TIMEZONE || 'Asia/Riyadh',
+  // النسخ الاحتياطي التلقائي | automatic backups
+  backup: {
+    enabled: process.env.BACKUP_ENABLED !== '0' && process.env.BACKUP_ENABLED !== 'false',
+    dir: path.join(dataDir, 'backups'),
+    intervalHours: envNumber('BACKUP_INTERVAL_HOURS', 24, 1),
+    keep: Math.floor(envNumber('BACKUP_KEEP', 14, 1)),
+    s3,
+  },
   sessionHours: 12,
   maxBatchSize: 2000,
   dataDir,

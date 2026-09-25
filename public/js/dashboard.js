@@ -151,6 +151,22 @@ async function loadSheetsLink() {
   });
 }
 
+async function loadBackups() {
+  const info = await api('/api/backups');
+  const status = document.getElementById('backup-status');
+  const where = info.offsite ? 'على الحجم الدائم وفي التخزين الخارجي' : 'على الحجم الدائم';
+  document.getElementById('backup-hint').textContent = info.enabled
+    ? `تلقائي كل ${info.intervalHours} ساعة · يُحتفظ بآخر ${info.keep}`
+    : 'التلقائي متوقف';
+  const newest = info.files[0];
+  let text = newest
+    ? `آخر نسخة تلقائية: ${fmtDate(newest.at)} (${Math.max(1, Math.round(newest.size / 1024))} KB) ${where}.`
+    : 'لا توجد نسخة تلقائية بعد — تُؤخذ أول نسخة بعد دقيقة من تشغيل الخادم.';
+  if (info.last?.error) text += ` ⚠️ تعذّرت آخر محاولة: ${info.last.error}`;
+  status.textContent = text;
+}
+
 loadStats().catch(() => {});
+loadBackups().catch(() => {});
 loadBatches().catch(() => {});
 loadSheetsLink().catch(() => {});

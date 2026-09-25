@@ -3,6 +3,7 @@ import path from 'node:path';
 import express from 'express';
 import { config, ROOT } from './config.js';
 import * as db from './db.js';
+import { archiveName, buildArchive, lastBackup, listBackups } from './backup.js';
 import { generateCode, signCode, verifySignature, parseToken, normaliseCode, tokenUrl } from './codes.js';
 import { qrMatrix, qrPngBuffer, qrSvg } from './qr.js';
 import {
@@ -300,6 +301,26 @@ export function createApp() {
     const url = `${config.publicUrl}/api/export.csv?key=${encodeURIComponent(config.exportKey)}`;
     res.json({ enabled: true, url, formula: `=IMPORTDATA("${url}")`, timezone: config.timezone });
   });
+
+  // --------------------------------------------------------------- backups ---
+  // The archive carries the signing key, so it is never cached and never
+  // served to anyone without a session.
+  app.get('/api/backup', requireAuth, (_req, res) => {
+    const archive = buildArchive();
+    res.set('Content-Type', 'application/zip');
+    res.set('Content-Disposition', `attachment; filename="${archiveName()}"`);
+    res.set('Cache-Control', 'no-store');
+    res.send(archive);
+  });
+
+  app.get('/api/backups', requireAuth, (_req, res) => res.json({
+    enabled: config.backup.enabled,
+    intervalHours: config.backup.intervalHours,
+    keep: config.backup.keep,
+    offsite: config.backup.s3.enabled,
+    last: lastBackup(),
+    files: listBackups(),
+  }));
 
   // ------------------------------------------------------------------ misc ---
   app.get('/healthz', (_req, res) => res.json({ ok: true }));

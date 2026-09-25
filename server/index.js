@@ -1,4 +1,5 @@
 import { createApp } from './app.js';
+import { startBackupSchedule } from './backup.js';
 import { config } from './config.js';
 import { closeDb, getDb } from './db.js';
 
@@ -21,11 +22,14 @@ const server = app.listen(config.port, () => {
   console.log(`${line}\n`);
 });
 
+const stopBackups = startBackupSchedule();
+
 // Platforms send SIGTERM and may SIGKILL moments later, so close the database
 // as well as the socket — an unchecked-in WAL is recoverable, a closed one is
 // simply clean. (On Railway, RAILWAY_DEPLOYMENT_DRAINING_SECONDS buys time.)
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.on(signal, () => {
+    stopBackups();
     server.close(() => {
       try { closeDb(); } catch { /* already gone */ }
       process.exit(0);
