@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>توليد الكوبونات — كوبونات المشرفون</title>
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="page-head no-print">
+      <div>
+        <h1>توليد الكوبونات</h1>
+        <p class="sub" id="source-sub">الأكواد تُقرأ من جدول Google Sheets، ولكل كود رمز QR خاص به</p>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn gold" id="reload-btn">تحديث من الجدول</button>
+      <button class="btn ghost" id="settings-btn">الإعدادات</button>
+    </div>
+
+    <section class="card no-print" id="setup" hidden>
+      <div class="card-title"><h2>الخطوة الأولى: اربط جدول الأكواد</h2></div>
+      <ol class="steps">
+        <li>أنشئ جدولاً في Google Sheets، واكتب في الصف الأول العناوين:
+          <b>الكود</b> · <b>القيمة</b> · <b>الحالة</b> · <b>تاريخ الاستخدام</b> · <b>ملاحظة</b>
+          (المطلوب فعلاً عمود <b>الكود</b> فقط).</li>
+        <li>ضع كل كود في صف تحت «الكود». اترك «الحالة» فارغة للكوبون الصالح، واكتب <b>مستخدم</b> عند استخدامه، أو <b>ملغى</b> لإلغائه.</li>
+        <li>من القائمة: <b>ملف ← مشاركة ← النشر على الويب</b>، اختر الورقة وصيغة <b>CSV</b> واضغط «نشر»، ثم انسخ الرابط.</li>
+        <li>اضغط «الإعدادات» هنا والصق الرابط.</li>
+      </ol>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn gold" data-open-settings>فتح الإعدادات</button>
+        <a class="btn ghost" href="sheet-template.csv" download>تحميل قالب الجدول (CSV)</a>
+      </div>
+    </section>
+
+    <section class="grid cols-4 no-print" id="stats" aria-label="إحصائيات" hidden></section>
+
+    <section class="card no-print" id="result" hidden style="margin-top:18px">
+      <div class="card-title">
+        <h2>الكوبونات</h2>
+        <span class="hint" id="result-hint"></span>
+      </div>
+      <form id="filters" class="filters">
+        <input type="search" name="q" placeholder="ابحث برقم الكوبون أو الملاحظة" autocomplete="off">
+        <select name="status">
+          <option value="active">الصالحة فقط</option>
+          <option value="">كل الكوبونات</option>
+          <option value="used">المستخدمة</option>
+          <option value="void">الملغاة</option>
+        </select>
+      </form>
+      <div class="btn-row" style="margin:14px 0 16px">
+        <button class="btn" id="download-zip">تحميل الكل (ZIP)</button>
+        <button class="btn ghost" id="print-btn">طباعة A4</button>
+      </div>
+      <div class="coupon-grid" id="coupon-grid"></div>
+      <p class="help" id="preview-note" style="margin-top:14px"></p>
+    </section>
+
+    <section class="card no-print" id="codes-helper" style="margin-top:18px">
+      <div class="card-title">
+        <h2>أكواد جديدة للجدول</h2>
+        <span class="hint">اختياري</span>
+      </div>
+      <p class="help" style="margin-bottom:12px">
+        تحتاج أكواداً جديدة؟ اكتب العدد فتظهر أكواد عشوائية فريدة، انسخها والصقها في عمود «الكود» في الجدول.
+        يمكنك أيضاً كتابة أكوادك أنت مباشرة في الجدول.
+      </p>
+      <form id="codes-form" class="filters">
+        <input type="number" name="count" value="10" min="1" max="2000" inputmode="numeric" aria-label="عدد الأكواد">
+        <input type="text" name="prefix" value="MSH" maxlength="8" aria-label="بادئة الكود" style="direction:ltr;text-align:center">
+        <button class="btn" type="submit">إنشاء</button>
+      </form>
+      <div id="codes-out" hidden style="margin-top:12px">
+        <textarea id="codes-text" rows="6" readonly style="font-family:var(--mono);direction:ltr"></textarea>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn" id="copy-codes">نسخ الأكواد</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sheet print-only" id="print-sheet" aria-hidden="true"></section>
+  </div>
+
+  <dialog id="settings" class="dialog">
+    <form method="dialog" id="settings-form">
+      <h2 style="margin-bottom:14px">الإعدادات</h2>
+      <label class="field">
+        <span class="lbl">رابط جدول Google Sheets</span>
+        <input type="text" name="sheetUrl" dir="ltr" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv">
+        <span class="help">رابط «النشر على الويب» بصيغة CSV، أو رابط الجدول إذا كانت مشاركته «أي شخص لديه الرابط».</span>
+      </label>
+      <div class="grid cols-2" style="gap:0 14px">
+        <label class="field">
+          <span class="lbl">قيمة الخصم الافتراضية</span>
+          <input type="text" name="defaultAmount" maxlength="12">
+          <span class="help">تُستخدم إذا كان عمود «القيمة» فارغاً.</span>
+        </label>
+        <label class="field">
+          <span class="lbl">محتوى رمز QR</span>
+          <select name="qrContent">
+            <option value="link">رابط الكشف + الكود</option>
+            <option value="code">الكود فقط</option>
+          </select>
+          <span class="help">الرابط يفتح حالة الكوبون بكاميرا الجوال مباشرة.</span>
+        </label>
+      </div>
+      <details style="margin-bottom:14px">
+        <summary class="lbl" style="cursor:pointer;font-weight:700">زر «تم الإستخدام» (اختياري)</summary>
+        <p class="help" style="margin:8px 0 12px">
+          ليكتب الموقع «مستخدم» في الجدول بنفسه، انشر ملف <code>apps-script/Code.gs</code> من المستودع كـ Apps Script
+          على نفس الجدول، والصق رابطه والمفتاح هنا. بدونه يُعلَّم الكوبون يدوياً في الجدول.
+        </p>
+        <label class="field">
+          <span class="lbl">رابط Apps Script</span>
+          <input type="text" name="scriptUrl" dir="ltr" placeholder="https://script.google.com/macros/s/…/exec">
+        </label>
+        <label class="field">
+          <span class="lbl">المفتاح السري</span>
+          <input type="password" name="scriptKey" dir="ltr" autocomplete="off">
+          <span class="help">يُحفظ على هذا الجهاز فقط، ولا يُرفع إلى GitHub.</span>
+        </label>
+      </details>
+      <div class="btn-row">
+        <button class="btn gold" value="save">حفظ</button>
+        <button class="btn ghost" value="cancel" formnovalidate>إلغاء</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="vendor/qrcode.js"></script>
+  <script type="module" src="js/generator.js"></script>
+</body>
+</html>
