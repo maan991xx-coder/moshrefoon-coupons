@@ -6,7 +6,7 @@ window.MOSHREFOON_CONFIG = {
   // رابط جدول Google Sheets الذي فيه الأكواد. يقبل أيّاً من:
   //  - رابط «النشر على الويب» بصيغة CSV  (…/pub?output=csv)
   //  - رابط الجدول العادي إذا كانت مشاركته «أي شخص لديه الرابط — عارض»
-  sheetUrl: '',
+  sheetUrl: 'https://docs.google.com/spreadsheets/d/1wyB57HJVWM80bNx2LGjXqHQgKBPO5OZ0AXTWJjTEayM/edit',
 
   // قيمة الخصم الافتراضية إذا كان عمود «القيمة» فارغاً.
   defaultAmount: '10',
